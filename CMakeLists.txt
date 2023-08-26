@@ -9,5 +9,7 @@ PKG_SEARCH_MODULE(SDL2IMAGE REQUIRED SDL2_image>=2.0.0)
 
 INCLUDE_DIRECTORIES(${SDL2_INCLUDE_DIRS} ${SDL2IMAGE_INCLUDE_DIRS})
 
+add_subdirectory($ENV{HOME}/graphics/src/lib)
+
 add_executable(graphics src/main.cpp)
-target_link_libraries(graphics ${SDL2_LIBRARIES} ${SDL2IMAGE_LIBRARIES})
+target_link_libraries(graphics ${SDL2_LIBRARIES} ${SDL2IMAGE_LIBRARIES} lib)
