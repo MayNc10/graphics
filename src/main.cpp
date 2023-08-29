@@ -6,6 +6,8 @@
 #include <string>
 #include "lib/array.h"
 #include "lib/texture.h"
+#include "gamelib/tile.h"
+#include "gamelib/hex_map.h"
  
 // Screen dimension constants
 const int SCREEN_WIDTH = 640;
@@ -18,41 +20,30 @@ bool init();
 SDL_Surface* load_surface(std::string path);
 
 // Frees media and shuts down SDL
-void close(Array<SDL_Surface*> surfaces, Array<SDL_Texture*> textures);
+void close();
 
 // Loads individual image as texture
 SDL_Texture* load_texture(std::string path);
 
 // The window we'll be rendering to
-SDL_Window* WINDOW = NULL;
+SDL_Window* WINDOW = nullptr;
     
 // The surface contained by the window
-SDL_Surface* SCREEN_SURFACE = NULL;
+SDL_Surface* SCREEN_SURFACE = nullptr;
 
 // The window renderer
-SDL_Renderer* RENDERER = NULL;
+SDL_Renderer* RENDERER = nullptr;
 
 int main(int argc, char *argv[]) {
-    // Forward declare surfaces
-    Texture image_tex = Texture();
-
     if (!init()) {
         printf("Failed to initialize!\n");
-    } else {
+    } else { 
         // Load media
-        if (!image_tex.load_from_file("../media/trump.jpg", RENDERER)) {
+        if (!init_hexmap(RENDERER, SCREEN_WIDTH, SCREEN_HEIGHT, 1)) { 
             printf("Failed to load media!\n");
         } else {
-            // Clear screen
-            SDL_RenderClear( RENDERER );
-
-            SDL_Rect clip;
-            SDL_GetWindowSize(WINDOW, &clip.w, &clip.h);
-
-            image_tex.render(0, 0, RENDERER, &clip);
-
             // Update screen
-            SDL_RenderPresent( RENDERER );
+            SDL_RenderPresent(RENDERER);
 
             // Main loop flag
             bool quit = false;
@@ -76,17 +67,8 @@ int main(int argc, char *argv[]) {
             }
         }
     }
-
-    // Create surfaces array
-    SDL_Surface* arr_surfaces[] = {};
-    auto surfaces = Array<SDL_Surface*> {arr_surfaces, sizeof(arr_surfaces) / sizeof(arr_surfaces[0])};
-
-    // Create textures array
-    SDL_Texture* arr_textures[] = {};
-    auto textures = Array<SDL_Texture*> {arr_textures, sizeof(arr_textures) / sizeof(arr_textures[0])};
-
     // Free resources and close SDL
-    close(surfaces, textures);
+    close();
     
     return 0;
 }
@@ -104,13 +86,13 @@ bool init() {
         WINDOW = SDL_CreateWindow("SDL Tutorial", 
             SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 
             SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
-        if (WINDOW == NULL) {
+        if (WINDOW == nullptr) {
             printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
             success = false;
         } else {
             // Create renderer for window
             RENDERER = SDL_CreateRenderer(WINDOW, -1, SDL_RENDERER_ACCELERATED);
-            if (RENDERER == NULL) {
+            if (RENDERER == nullptr) {
                 printf( "Renderer could not be created! SDL Error: %s\n", SDL_GetError() );
                 success = false;
             } else {
@@ -132,18 +114,18 @@ bool init() {
 
 SDL_Surface* load_surface(std::string path) {
     // The final optimized image
-    SDL_Surface* optimizedSurface = NULL;
+    SDL_Surface* optimizedSurface = nullptr;
 
     // Load image at specified path
     SDL_Surface* loadedSurface = IMG_Load(path.c_str());
-    if (loadedSurface == NULL) {
+    if (loadedSurface == nullptr) {
         printf("Unable to load image %s! SDL Error: %s\n", path.c_str(), SDL_GetError());
     }
 
     else {
         // Convert surface to screen format
         optimizedSurface = SDL_ConvertSurface(loadedSurface, SCREEN_SURFACE->format, 0);
-        if(optimizedSurface == NULL) {
+        if(optimizedSurface == nullptr) {
             printf("Unable to optimize image %s! SDL Error: %s\n", path.c_str(), SDL_GetError());
         }
 
@@ -156,16 +138,16 @@ SDL_Surface* load_surface(std::string path) {
 
 SDL_Texture* load_texture(std::string path) {
     // The final texture
-    SDL_Texture* newTexture = NULL;
+    SDL_Texture* newTexture = nullptr;
 
     // Load image at specified path
     SDL_Surface* loadedSurface = IMG_Load(path.c_str());
-    if (loadedSurface == NULL) {
+    if (loadedSurface == nullptr) {
         printf( "Unable to load image %s! SDL_image Error: %s\n", path.c_str(), IMG_GetError() );
     } else {
         // Create texture from surface pixels
         newTexture = SDL_CreateTextureFromSurface(RENDERER, loadedSurface);
-        if (newTexture == NULL) {
+        if (newTexture == nullptr) {
             printf("Unable to create texture from %s! SDL Error: %s\n", path.c_str(), SDL_GetError());
         }
 
@@ -176,24 +158,12 @@ SDL_Texture* load_texture(std::string path) {
     return newTexture;
 }
 
-void close(Array<SDL_Surface*> surfaces, Array<SDL_Texture*> textures) {
-    // Free surfaces
-    for (int i = 0; i < surfaces.size; i++) {
-        SDL_FreeSurface(surfaces.arr[i]);
-        surfaces.arr[i] = NULL;
-    }
-
-    // Destroy textures
-    for (int i = 0; i < textures.size; i++) {
-        SDL_DestroyTexture(textures.arr[i]);
-        textures.arr[i] = NULL;
-    }
-
+void close() {
     // Destroy window
     SDL_DestroyRenderer(RENDERER);
     SDL_DestroyWindow(WINDOW);
-    WINDOW = NULL;
-    RENDERER = NULL;
+    WINDOW = nullptr;
+    RENDERER = nullptr;
 
     // Quit SDL subsystems
     IMG_Quit();
